@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.15.1/dist/phaser-arcade-physics.min.js"></script>
+</head>
+<body>
+
+    <script>
+
+    class Escena extends Phaser.Scene {
+        preload() {
+            resize();
+            window.addEventListener('resize', resize, false);
+            this.load.setBaseURL('http://localhost/flappy/');
+
+            this.load.image('fondo', 'assets/img/navidad.png');
+            this.load.spritesheet('santa', 'assets/img/santa.png',{frameWidth: 50, frameHeight: 50});
+            this.load.image('pipe0', 'assets/img/pipe0.png');
+            this.load.image('pipeArriba0', 'assets/img/pipeArriba0.png');
+            this.load.image('pipeAbajo0', 'assets/img/pipeAbajo0.png');
+            this.load.image('pipe1', 'assets/img/pipe0.png');
+            this.load.image('pipeArriba1', 'assets/img/pipeArriba0.png');
+            this.load.image('pipeAbajo1', 'assets/img/pipeAbajo0.png');
+        };
+
+        create() {
+            this.bg = this.add.tileSprite(480, 320, 960, 640, 'fondo').setScrollFactor(0);
+            this.player = this.physics.add.sprite(50, 100, 'santa');
+            this.anims.create({
+                key: 'volar',
+                frames: this.anims.generateFrameNumbers('santa', {start: 0, end: 3}),
+                frameRate: 7,
+                repeat: -1,
+            });
+            this.player.play('volar');
+            this.input.keyboard.on('keydown', (event) =>{
+                if (event.keyCode === 32) {
+                    this.saltar();
+                }
+            });
+            this.input.on('pointerdown', () => this.saltar());
+            this.anims.create({
+                key: 'saltar',
+                frames: this.anims.generateFrameNumbers('santa', {start: 4, end: 7}),
+                frameRate: 7,
+                repeat: 1,
+            });
+            this.player.on('animationcomplete', this.animationComplete, this);
+        }
+
+        saltar() {
+            this.player.setVelocityY(-200);
+            this.player.play('saltar');
+        }
+
+        animationComplete(animation, frame, sprite) {
+            if(animation.key === 'saltar') {
+                this.player.play('volar');
+            }
+        }
+
+        nuevaColumna() {
+            //Una columna es un grupo de cubos
+            const columna = this.physics.add.group();
+            //Cada columna tendrá un hueco por donde pasara santa
+            const hueco = Math.floor(Math.random() * 5) + 1;
+            const aleatorio = Math.floor(Math.random() * 2);
+            for (let i=0; i < 8; i++) {
+                //El hueco estara compuesto por dos posiciones en las que no hay cubos
+                if(i !== hueco && i !== hueco + 1 && i !== hueco - 1) {
+                    let cubo;
+                    if(i == hueco - 2) {
+                        cubo = columna.create(960, i * 100, 'pipeArriba' + aleatorio);
+                    } else if (i == hueco + 2) {
+                        cubo = columna.create(960, i * 100, 'pipeAbajo' + aleatorio);
+                    } else {
+                        cubo = columna.create(960, i * 100, 'pipe' + aleatorio);
+                    }
+                    cubo.body.allowGravity = false;
+                }
+            }
+            columna.setVelocityX(-200);
+            //Detectaremos cuando las columnas salen de la pantalla...
+            columna.checkWorldBounds = true;
+            //... y con la siguiente linea se eliminan
+            columna.outOfBoundsKill = true;
+            //Cada 1000 milisegundos llamaremos de nueva la funcion para que genere nuevas columnas
+            this.time.delayedCall(1000, this.nuevaColumna, [], this);
+            this.physics.add.overlap(this.player, columna, this.hitColumna, null, this);
+        }
+
+        hitColumna() {
+            this.scene.start('perderScene');
+        }
+
+        update(time) {
+            this.bg.tilePositionX = time*0.1;
+        }
+
+    }
+
+    class PerderEscena extends Phaser.Scene {
+        constructor() {
+            super({key: 'perderScene'});
+        }
+        preload() {
+            this.load.setBaseURL('http://localhost/flappy/');
+
+            this.load.image('perder', 'assets/img/game_over.png');
+        }
+        create() {
+            this.add.image(480, 320, 'perder');
+        }
+    }
+
+    const config = {
+        type: Phaser.AUTO,
+        width: 960,
+        height: 640,
+        scene: {Escena, PerderEscena},
+        physics: {
+            default: 'arcade',
+            arcade: {
+                gravity: {y: 500}
+            },
+        },
+    };
+
+    const game = new Phaser.Game(config);
+
+    </script>
+
+</body>
+</html>
