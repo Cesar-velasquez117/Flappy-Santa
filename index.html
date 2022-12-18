@@ -10,16 +10,15 @@
     class Escena extends Phaser.Scene {
 
         preload() {
-            //this.resize();
-            //window.addEventListener('resize', resize, false);
-            this.load.image('fondo', 'assets/img/navidad.png')
+
+            this.load.image('fondo', 'assets/img/navidad.png');
             this.load.spritesheet('santa', 'assets/img/santa.png', {frameWidth: 48, frameHeight: 30});
-            this.load.image('pipe0', 'assets/img/pipe0.png')
-            this.load.image('pipeAbajo0', 'assets/img/pipeAbajo0.png')
-            this.load.image('pipeArriba0', 'assets/img/pipeArriba0.png')
-            this.load.image('pipe1', 'assets/img/pipe1.png')
-            this.load.image('pipeAbajo1', 'assets/img/pipeAbajo1.png')
-            this.load.image('pipeArriba1', 'assets/img/pipeArriba1.png')
+            this.load.image('pipe0', 'assets/img/pipe0.png');
+            this.load.image('pipeAbajo0', 'assets/img/pipeAbajo0.png');
+            this.load.image('pipeArriba0', 'assets/img/pipeArriba0.png');
+            this.load.image('pipe1', 'assets/img/pipe1.png');
+            this.load.image('pipeAbajo1', 'assets/img/pipeAbajo1.png');
+            this.load.image('pipeArriba1', 'assets/img/pipeArriba1.png');
         };
 
         create() {
@@ -102,9 +101,17 @@
         }
         preload() {
             this.load.image('perder', 'assets/img/game_over.png');
+            this.load.audio('over', 'assets/music/Christmas_game_over.mp3');
         }
         create() {
             this.add.image(480, 320, 'perder');
+            var playing = false;
+            if (!playing && !this.load.isLoading()){
+                playing = true;
+                var music = this.sound.add('over')
+                music.loop = true;
+                music.play();
+            }
         }
     }
 
